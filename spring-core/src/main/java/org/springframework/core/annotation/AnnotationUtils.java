@@ -39,6 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.core.BridgeMethodResolver;
+import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -588,8 +589,7 @@ public abstract class AnnotationUtils {
 			Set<Method> annotatedMethods = getAnnotatedMethodsInBaseType(ifc);
 			if (!annotatedMethods.isEmpty()) {
 				for (Method annotatedMethod : annotatedMethods) {
-					if (annotatedMethod.getName().equals(method.getName()) &&
-							Arrays.equals(annotatedMethod.getParameterTypes(), method.getParameterTypes())) {
+					if (isOverride(method, annotatedMethod)) {
 						A annotation = getAnnotation(annotatedMethod, annotationType);
 						if (annotation != null) {
 							return annotation;
@@ -643,6 +643,23 @@ public abstract class AnnotationUtils {
 		if (anns.length == 1) {
 			Class<?> annType = anns[0].annotationType();
 			return (annType != Nullable.class && annType != Deprecated.class);
+		}
+		return true;
+	}
+
+	private static boolean isOverride(Method method, Method candidate) {
+		if (!candidate.getName().equals(method.getName()) ||
+				candidate.getParameterCount() != method.getParameterCount()) {
+			return false;
+		}
+		Class<?>[] paramTypes = method.getParameterTypes();
+		if (Arrays.equals(candidate.getParameterTypes(), paramTypes)) {
+			return true;
+		}
+		for (int i = 0; i < paramTypes.length; i++) {
+			if (paramTypes[i] != ResolvableType.forMethodParameter(candidate, i, method.getDeclaringClass()).resolve()) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -1327,11 +1344,12 @@ public abstract class AnnotationUtils {
 		}
 
 		// Replace any remaining placeholders with actual default values
-		for (String attributeName : attributes.keySet()) {
+		for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
+			String attributeName = attributeEntry.getKey();
 			if (valuesAlreadyReplaced.contains(attributeName)) {
 				continue;
 			}
-			Object value = attributes.get(attributeName);
+			Object value = attributeEntry.getValue();
 			if (value instanceof DefaultValueHolder) {
 				value = ((DefaultValueHolder) value).defaultValue;
 				attributes.put(attributeName,

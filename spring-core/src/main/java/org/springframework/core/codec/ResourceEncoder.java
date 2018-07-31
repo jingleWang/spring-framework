@@ -18,7 +18,6 @@ package org.springframework.core.codec;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
 import reactor.core.publisher.Flux;
 
 import org.springframework.core.ResolvableType;
@@ -61,7 +60,7 @@ public class ResourceEncoder extends AbstractSingleValueEncoder<Resource> {
 
 	@Override
 	public boolean canEncode(ResolvableType elementType, @Nullable MimeType mimeType) {
-		Class<?> clazz = elementType.resolve(Object.class);
+		Class<?> clazz = elementType.toClass();
 		return (super.canEncode(elementType, mimeType) && Resource.class.isAssignableFrom(clazz));
 	}
 
@@ -69,9 +68,9 @@ public class ResourceEncoder extends AbstractSingleValueEncoder<Resource> {
 	protected Flux<DataBuffer> encode(Resource resource, DataBufferFactory dataBufferFactory,
 			ResolvableType type, @Nullable MimeType mimeType, @Nullable Map<String, Object> hints) {
 
-		Log theLogger = Hints.getLoggerOrDefault(hints, logger);
-		if (theLogger.isDebugEnabled()) {
-			theLogger.debug(Hints.getLogPrefix(hints) + "Writing [" + resource + "]");
+		if (logger.isDebugEnabled() && !Hints.isLoggingSuppressed(hints)) {
+			String logPrefix = Hints.getLogPrefix(hints);
+			logger.debug(logPrefix + "Writing [" + resource + "]");
 		}
 
 		return DataBufferUtils.read(resource, dataBufferFactory, this.bufferSize);

@@ -556,8 +556,8 @@ public class SchedulerFactoryBean extends SchedulerAccessor implements FactoryBe
 		}
 
 		if (this.configLocation != null) {
-			if (logger.isInfoEnabled()) {
-				logger.info("Loading Quartz config from [" + this.configLocation + "]");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Loading Quartz config from [" + this.configLocation + "]");
 			}
 			PropertiesLoaderUtils.fillProperties(mergedProps, this.configLocation);
 		}
@@ -717,7 +717,7 @@ public class SchedulerFactoryBean extends SchedulerAccessor implements FactoryBe
 				@Override
 				public void run() {
 					try {
-						Thread.sleep(TimeUnit.SECONDS.toMillis(startupDelay));
+						TimeUnit.SECONDS.sleep(startupDelay);
 					}
 					catch (InterruptedException ex) {
 						Thread.currentThread().interrupt();

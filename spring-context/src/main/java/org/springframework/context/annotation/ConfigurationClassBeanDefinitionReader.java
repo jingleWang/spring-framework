@@ -89,8 +89,8 @@ class ConfigurationClassBeanDefinitionReader {
 
 
 	/**
-	 * Create a new {@link ConfigurationClassBeanDefinitionReader} instance that will be used
-	 * to populate the given {@link BeanDefinitionRegistry}.
+	 * Create a new {@link ConfigurationClassBeanDefinitionReader} instance
+	 * that will be used to populate the given {@link BeanDefinitionRegistry}.
 	 */
 	ConfigurationClassBeanDefinitionReader(BeanDefinitionRegistry registry, SourceExtractor sourceExtractor,
 			ResourceLoader resourceLoader, Environment environment, BeanNameGenerator importBeanNameGenerator,
@@ -266,11 +266,10 @@ class ConfigurationClassBeanDefinitionReader {
 					(RootBeanDefinition) proxyDef.getBeanDefinition(), configClass, metadata);
 		}
 
-		if (logger.isDebugEnabled()) {
-			logger.debug(String.format("Registering bean definition for @Bean method %s.%s()",
+		if (logger.isTraceEnabled()) {
+			logger.trace(String.format("Registering bean definition for @Bean method %s.%s()",
 					configClass.getMetadata().getClassName(), beanName));
 		}
-
 		this.registry.registerBeanDefinition(beanName, beanDefToRegister);
 	}
 
@@ -309,8 +308,8 @@ class ConfigurationClassBeanDefinitionReader {
 			throw new BeanDefinitionStoreException(beanMethod.getConfigurationClass().getResource().getDescription(),
 					beanName, "@Bean definition illegally overridden by existing bean definition: " + existingBeanDef);
 		}
-		if (logger.isInfoEnabled()) {
-			logger.info(String.format("Skipping bean definition for %s: a definition for bean '%s' " +
+		if (logger.isDebugEnabled()) {
+			logger.debug(String.format("Skipping bean definition for %s: a definition for bean '%s' " +
 					"already exists. This top-level bean definition is considered as an override.",
 					beanMethod, beanName));
 		}

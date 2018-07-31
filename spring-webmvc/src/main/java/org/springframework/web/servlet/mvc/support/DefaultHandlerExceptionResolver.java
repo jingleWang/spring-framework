@@ -124,7 +124,7 @@ import org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver;
  * </tr>
  * <tr class="rowColor">
  * <td><p>NoHandlerFoundException</p></td>
- * <td><p>400 (SC_NOT_FOUND)</p></td>
+ * <td><p>404 (SC_NOT_FOUND)</p></td>
  * </tr>
  * <tr class="altColor">
  * <td><p>AsyncRequestTimeoutException</p></td>
@@ -227,15 +227,13 @@ public class DefaultHandlerExceptionResolver extends AbstractHandlerExceptionRes
 				return handleAsyncRequestTimeoutException(
 						(AsyncRequestTimeoutException) ex, request, response, handler);
 			}
-			else {
-				return null;
-			}
-
 		}
 		catch (Exception handlerEx) {
-			logger.warn("Failure while trying to resolve exception [" + ex.getClass().getName() + "]", handlerEx);
-			return null;
+			if (logger.isWarnEnabled()) {
+				logger.warn("Failure while trying to resolve exception [" + ex.getClass().getName() + "]", handlerEx);
+			}
 		}
+		return null;
 	}
 
 	/**
@@ -543,7 +541,7 @@ public class DefaultHandlerExceptionResolver extends AbstractHandlerExceptionRes
 		if (!response.isCommitted()) {
 			response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
 		}
-		else if (logger.isWarnEnabled()) {
+		else {
 			logger.warn("Async request timed out");
 		}
 		return new ModelAndView();

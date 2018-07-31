@@ -54,12 +54,12 @@ import com.fasterxml.jackson.dataformat.xml.JacksonXmlModule;
 import com.fasterxml.jackson.dataformat.xml.XmlFactory;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.KotlinDetector;
+import org.springframework.http.HttpLogging;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -103,7 +103,7 @@ public class Jackson2ObjectMapperBuilder {
 
 	private static volatile boolean kotlinWarningLogged = false;
 
-	private final Log logger = LogFactory.getLog(getClass());
+	private final Log logger = HttpLogging.forLogName(getClass());
 
 	private final Map<Class<?>, Class<?>> mixIns = new HashMap<>();
 
@@ -458,8 +458,7 @@ public class Jackson2ObjectMapperBuilder {
 	 * @see com.fasterxml.jackson.annotation.PropertyAccessor
 	 * @see com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility
 	 */
-	public Jackson2ObjectMapperBuilder visibility(PropertyAccessor accessor,
-			JsonAutoDetect.Visibility visibility) {
+	public Jackson2ObjectMapperBuilder visibility(PropertyAccessor accessor, JsonAutoDetect.Visibility visibility) {
 		this.visibilities.put(accessor, visibility);
 		return this;
 	}

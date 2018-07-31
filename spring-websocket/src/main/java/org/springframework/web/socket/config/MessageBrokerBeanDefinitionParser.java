@@ -111,11 +111,15 @@ class MessageBrokerBeanDefinitionParser implements BeanDefinitionParser {
 
 	private static final int DEFAULT_MAPPING_ORDER = 1;
 
-	private static final boolean jackson2Present = ClassUtils.isPresent(
-			"com.fasterxml.jackson.databind.ObjectMapper", MessageBrokerBeanDefinitionParser.class.getClassLoader());
+	private static final boolean jackson2Present;
 
-	private static final boolean javaxValidationPresent =
-			ClassUtils.isPresent("javax.validation.Validator", MessageBrokerBeanDefinitionParser.class.getClassLoader());
+	private static final boolean javaxValidationPresent;
+
+	static {
+		ClassLoader classLoader = MessageBrokerBeanDefinitionParser.class.getClassLoader();
+		jackson2Present = ClassUtils.isPresent("com.fasterxml.jackson.databind.ObjectMapper", classLoader);
+		javaxValidationPresent = ClassUtils.isPresent("javax.validation.Validator", classLoader);
+	}
 
 
 	@Override
@@ -155,7 +159,7 @@ class MessageBrokerBeanDefinitionParser implements BeanDefinitionParser {
 			List<String> paths = Arrays.asList(StringUtils.tokenizeToStringArray(pathAttribute, ","));
 			for (String path : paths) {
 				path = path.trim();
-				Assert.state(StringUtils.hasText(path), "Invalid <stomp-endpoint> path attribute: " + pathAttribute);
+				Assert.state(StringUtils.hasText(path), () -> "Invalid <stomp-endpoint> path attribute: " + pathAttribute);
 				if (DomUtils.getChildElementByTagName(endpointElem, "sockjs") != null) {
 					path = path.endsWith("/") ? path + "**" : path + "/**";
 				}
@@ -163,7 +167,7 @@ class MessageBrokerBeanDefinitionParser implements BeanDefinitionParser {
 			}
 		}
 
-		Map<String, Object> scopeMap = Collections.<String, Object>singletonMap("websocket", new SimpSessionScope());
+		Map<String, Object> scopeMap = Collections.singletonMap("websocket", new SimpSessionScope());
 		RootBeanDefinition scopeConfigurer = new RootBeanDefinition(CustomScopeConfigurer.class);
 		scopeConfigurer.getPropertyValues().add("scopes", scopeMap);
 		registerBeanDefByName("webSocketScopeConfigurer", scopeConfigurer, context, source);
@@ -444,6 +448,12 @@ class MessageBrokerBeanDefinitionParser implements BeanDefinitionParser {
 			// Should not happen
 			throw new IllegalStateException("Neither <simple-broker> nor <stomp-broker-relay> elements found.");
 		}
+
+		if (brokerElement.hasAttribute("preserve-publish-order")) {
+			String preservePublishOrder = brokerElement.getAttribute("preserve-publish-order");
+			brokerDef.getPropertyValues().add("preservePublishOrder", preservePublishOrder);
+		}
+
 		registerBeanDef(brokerDef, context, source);
 		return brokerDef;
 	}

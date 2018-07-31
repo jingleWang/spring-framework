@@ -16,6 +16,7 @@
 
 package org.springframework.web.reactive.socket.server.support;
 
+import java.net.URI;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.List;
@@ -62,21 +63,21 @@ public class HandshakeWebSocketService implements WebSocketService, Lifecycle {
 	private static final Mono<Map<String, Object>> EMPTY_ATTRIBUTES = Mono.just(Collections.emptyMap());
 
 
-	private static final boolean tomcatPresent = ClassUtils.isPresent(
-			"org.apache.tomcat.websocket.server.WsHttpUpgradeHandler",
-			HandshakeWebSocketService.class.getClassLoader());
+	private static final boolean tomcatPresent;
 
-	private static final boolean jettyPresent = ClassUtils.isPresent(
-			"org.eclipse.jetty.websocket.server.WebSocketServerFactory",
-			HandshakeWebSocketService.class.getClassLoader());
+	private static final boolean jettyPresent;
 
-	private static final boolean undertowPresent = ClassUtils.isPresent(
-			"io.undertow.websockets.WebSocketProtocolHandshakeHandler",
-			HandshakeWebSocketService.class.getClassLoader());
+	private static final boolean undertowPresent;
 
-	private static final boolean reactorNettyPresent = ClassUtils.isPresent(
-			"reactor.netty.http.server.HttpServerResponse",
-			HandshakeWebSocketService.class.getClassLoader());
+	private static final boolean reactorNettyPresent;
+
+	static {
+		ClassLoader classLoader = HandshakeWebSocketService.class.getClassLoader();
+		tomcatPresent = ClassUtils.isPresent("org.apache.tomcat.websocket.server.WsHttpUpgradeHandler", classLoader);
+		jettyPresent = ClassUtils.isPresent("org.eclipse.jetty.websocket.server.WebSocketServerFactory", classLoader);
+		undertowPresent = ClassUtils.isPresent("io.undertow.websockets.WebSocketProtocolHandshakeHandler", classLoader);
+		reactorNettyPresent = ClassUtils.isPresent("reactor.netty.http.server.HttpServerResponse", classLoader);
+	}
 
 
 	protected static final Log logger = LogFactory.getLog(HandshakeWebSocketService.class);
@@ -269,8 +270,11 @@ public class HandshakeWebSocketService implements WebSocketService, Lifecycle {
 	private HandshakeInfo createHandshakeInfo(ServerWebExchange exchange, ServerHttpRequest request,
 			@Nullable String protocol, Map<String, Object> attributes) {
 
+		URI uri = request.getURI();
+		HttpHeaders headers = request.getHeaders();
 		Mono<Principal> principal = exchange.getPrincipal();
-		return new HandshakeInfo(request.getURI(), request.getHeaders(), principal, protocol, attributes);
+		String logPrefix = exchange.getLogPrefix();
+		return new HandshakeInfo(uri, headers, principal, protocol, attributes, logPrefix);
 	}
 
 }

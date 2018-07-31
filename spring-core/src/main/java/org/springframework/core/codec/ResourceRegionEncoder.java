@@ -22,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.OptionalLong;
 
-import org.apache.commons.logging.Log;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -74,7 +73,7 @@ public class ResourceRegionEncoder extends AbstractEncoder<ResourceRegion> {
 	@Override
 	public boolean canEncode(ResolvableType elementType, @Nullable MimeType mimeType) {
 		return super.canEncode(elementType, mimeType)
-				&& ResourceRegion.class.isAssignableFrom(elementType.resolve(Object.class));
+				&& ResourceRegion.class.isAssignableFrom(elementType.toClass());
 	}
 
 	@Override
@@ -123,9 +122,8 @@ public class ResourceRegionEncoder extends AbstractEncoder<ResourceRegion> {
 		long position = region.getPosition();
 		long count = region.getCount();
 
-		Log theLogger = Hints.getLoggerOrDefault(hints, logger);
-		if (theLogger.isDebugEnabled()) {
-			theLogger.debug(Hints.getLogPrefix(hints) +
+		if (logger.isDebugEnabled() && !Hints.isLoggingSuppressed(hints)) {
+			logger.debug(Hints.getLogPrefix(hints) +
 					"Writing region " + position + "-" + (position + count) + " of [" + resource + "]");
 		}
 

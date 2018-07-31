@@ -49,6 +49,7 @@ import reactor.netty.tcp.TcpClient;
 
 import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MonoToListenableFutureAdapter;
 import org.springframework.messaging.tcp.ReconnectStrategy;
 import org.springframework.messaging.tcp.TcpConnection;
 import org.springframework.messaging.tcp.TcpConnectionHandler;
@@ -67,9 +68,9 @@ import org.springframework.util.concurrent.SettableListenableFuture;
  */
 public class ReactorNettyTcpClient<P> implements TcpOperations<P> {
 
-	private static Log logger = LogFactory.getLog(ReactorNettyTcpClient.class);
-
 	private static final int PUBLISH_ON_BUFFER_SIZE = 16;
+
+	private Log logger = LogFactory.getLog(ReactorNettyTcpClient.class);
 
 
 	private final TcpClient tcpClient;
@@ -135,6 +136,24 @@ public class ReactorNettyTcpClient<P> implements TcpOperations<P> {
 		this.channelGroup = null;
 		this.loopResources = null;
 		this.poolResources = null;
+	}
+
+
+	/**
+	 * Set an alternative logger to use than the one based on the class name.
+	 * @param logger the logger to use
+	 * @since 5.1
+	 */
+	public void setLogger(Log logger) {
+		this.logger = logger;
+	}
+
+	/**
+	 * Return the currently configured Logger.
+	 * @since 5.1
+	 */
+	public Log getLogger() {
+		return logger;
 	}
 
 

@@ -191,9 +191,6 @@ class DefaultServerHttpRequestBuilder implements ServerHttpRequest.Builder {
 
 		private final ServerHttpRequest originalRequest;
 
-		@Nullable
-		private final String requestId;
-
 
 		public MutatedServerHttpRequest(URI uri, @Nullable String contextPath,
 				HttpHeaders headers, String methodValue, MultiValueMap<String, HttpCookie> cookies,
@@ -206,8 +203,6 @@ class DefaultServerHttpRequestBuilder implements ServerHttpRequest.Builder {
 			this.sslInfo = sslInfo != null ? sslInfo : originalRequest.getSslInfo();
 			this.body = body;
 			this.originalRequest = originalRequest;
-			this.requestId = originalRequest instanceof AbstractServerHttpRequest ?
-					((AbstractServerHttpRequest) originalRequest).getConnectionId() : null;
 		}
 
 		@Override
@@ -244,8 +239,8 @@ class DefaultServerHttpRequestBuilder implements ServerHttpRequest.Builder {
 		}
 
 		@Override
-		public String getConnectionId() {
-			return this.requestId;
+		public String getId() {
+			return this.originalRequest.getId();
 		}
 	}
 

@@ -23,7 +23,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,6 +30,7 @@ import reactor.core.publisher.Mono;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpLogging;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.lang.Nullable;
@@ -57,8 +57,8 @@ public abstract class AbstractServerHttpResponse implements ServerHttpResponse {
 	 */
 	private enum State {NEW, COMMITTING, COMMITTED}
 
+	protected final Log logger = HttpLogging.forLogName(getClass());
 
-	private final Log logger = LogFactory.getLog(getClass());
 
 	private final DataBufferFactory dataBufferFactory;
 
@@ -90,9 +90,6 @@ public abstract class AbstractServerHttpResponse implements ServerHttpResponse {
 	@Override
 	public boolean setStatusCode(@Nullable HttpStatus status) {
 		if (this.state.get() == State.COMMITTED) {
-			if (logger.isTraceEnabled()) {
-				logger.trace("Ignoring status " + status + ": response already committed");
-			}
 			return false;
 		}
 		else {

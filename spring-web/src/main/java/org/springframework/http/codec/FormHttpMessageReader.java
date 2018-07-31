@@ -84,7 +84,7 @@ public class FormHttpMessageReader extends LoggingCodecSupport
 	public boolean canRead(ResolvableType elementType, @Nullable MediaType mediaType) {
 		return ((MULTIVALUE_TYPE.isAssignableFrom(elementType) ||
 				(elementType.hasUnresolvableGenerics() &&
-						MultiValueMap.class.isAssignableFrom(elementType.resolve(Object.class)))) &&
+						MultiValueMap.class.isAssignableFrom(elementType.toClass()))) &&
 				(mediaType == null || MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(mediaType)));
 	}
 
@@ -108,8 +108,10 @@ public class FormHttpMessageReader extends LoggingCodecSupport
 					String body = charBuffer.toString();
 					DataBufferUtils.release(buffer);
 					MultiValueMap<String, String> formData = parseFormData(charset, body);
-					if (shouldLogRequestDetails()) {
-						logger.debug(Hints.getLogPrefix(hints) + "Decoded " + formData);
+					if (logger.isDebugEnabled()) {
+						String details = isEnableLoggingRequestDetails() ?
+								formData.toString() : "form fields " + formData.keySet() + " (content masked)";
+						logger.debug(Hints.getLogPrefix(hints) + "Read " + details);
 					}
 					return formData;
 				});

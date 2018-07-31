@@ -22,7 +22,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -57,7 +56,7 @@ public final class CharSequenceEncoder extends AbstractEncoder<CharSequence> {
 
 	@Override
 	public boolean canEncode(ResolvableType elementType, @Nullable MimeType mimeType) {
-		Class<?> clazz = elementType.resolve(Object.class);
+		Class<?> clazz = elementType.toClass();
 		return super.canEncode(elementType, mimeType) && CharSequence.class.isAssignableFrom(clazz);
 	}
 
@@ -69,9 +68,9 @@ public final class CharSequenceEncoder extends AbstractEncoder<CharSequence> {
 		Charset charset = getCharset(mimeType);
 
 		return Flux.from(inputStream).map(charSequence -> {
-			Log theLogger = Hints.getLoggerOrDefault(hints, logger);
-			if (theLogger.isDebugEnabled()) {
-				theLogger.debug(Hints.getLogPrefix(hints) + "Writing '" + charSequence + "'");
+			if (logger.isDebugEnabled() && !Hints.isLoggingSuppressed(hints)) {
+				String logPrefix = Hints.getLogPrefix(hints);
+				logger.debug(logPrefix + "Writing '" + charSequence + "'");
 			}
 			CharBuffer charBuffer = CharBuffer.wrap(charSequence);
 			ByteBuffer byteBuffer = charset.encode(charBuffer);

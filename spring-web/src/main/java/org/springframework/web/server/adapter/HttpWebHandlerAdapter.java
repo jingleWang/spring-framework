@@ -26,16 +26,15 @@ import reactor.core.publisher.Mono;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.NestedExceptionUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.LoggingCodecSupport;
 import org.springframework.http.codec.ServerCodecConfigurer;
-import org.springframework.http.server.reactive.AbstractServerHttpRequest;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebHandler;
@@ -96,8 +95,8 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 	@Nullable
 	private ApplicationContext applicationContext;
 
-	/** Do not log potentially sensitive data (query/form at DEBUG, headers at TRACE). */
-	private boolean disableLoggingRequestDetails = false;
+	/** Whether to log potentially sensitive info (form data at DEBUG, headers at TRACE). */
+	private boolean enableLoggingRequestDetails = false;
 
 
 	public HttpWebHandlerAdapter(WebHandler delegate) {
@@ -134,12 +133,12 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 		Assert.notNull(codecConfigurer, "ServerCodecConfigurer is required");
 		this.codecConfigurer = codecConfigurer;
 
-		this.disableLoggingRequestDetails = false;
+		this.enableLoggingRequestDetails = false;
 		this.codecConfigurer.getReaders().stream()
 				.filter(LoggingCodecSupport.class::isInstance)
 				.forEach(reader -> {
-					if (((LoggingCodecSupport) reader).isDisableLoggingRequestDetails()) {
-						this.disableLoggingRequestDetails = true;
+					if (((LoggingCodecSupport) reader).isEnableLoggingRequestDetails()) {
+						this.enableLoggingRequestDetails = true;
 					}
 				});
 	}
@@ -197,17 +196,11 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 	 */
 	public void afterPropertiesSet() {
 		if (logger.isDebugEnabled()) {
-			if (this.disableLoggingRequestDetails) {
-				logger.debug("Logging query, form data, multipart data, and headers is OFF.");
-			}
-			else {
-				logger.warn("\n\n" +
-						"!!!!!!!!!!!!!!!!!!!\n" +
-						"Logging query, form and multipart data (DEBUG), and headers (TRACE) may show sensitive data.\n" +
-						"If not in development, set \"disableLoggingRequestDetails(true)\" on ServerCodecConfigurer,\n" +
-						"or lower the log level.\n" +
-						"!!!!!!!!!!!!!!!!!!!\n");
-			}
+			String value = this.enableLoggingRequestDetails ?
+					"shown which may lead to unsafe logging of potentially sensitive data" :
+					"masked to prevent unsafe logging of potentially sensitive data";
+			logger.debug("enableLoggingRequestDetails='" + this.enableLoggingRequestDetails +
+					"': form data and headers will be " + value);
 		}
 	}
 
@@ -216,7 +209,6 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 	public Mono<Void> handle(ServerHttpRequest request, ServerHttpResponse response) {
 
 		ServerWebExchange exchange = createExchange(request, response);
-		exchange.getAttributes().put(ServerWebExchange.LOG_ID_ATTRIBUTE, initLogId(request));
 		logExchange(exchange);
 
 		return getDelegate().handle(exchange)
@@ -230,24 +222,12 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 				getCodecConfigurer(), getLocaleContextResolver(), this.applicationContext);
 	}
 
-	private String initLogId(ServerHttpRequest request) {
-		String logId = null;
-		if (request instanceof AbstractServerHttpRequest) {
-			logId = ((AbstractServerHttpRequest) request).getConnectionId();
-		}
-		if (logId == null) {
-			logId = ObjectUtils.getIdentityHexString(request);
-		}
-		return logId;
-	}
-
 	private void logExchange(ServerWebExchange exchange) {
 		if (logger.isDebugEnabled()) {
 			String logPrefix = exchange.getLogPrefix();
 			ServerHttpRequest request = exchange.getRequest();
 			if (logger.isTraceEnabled()) {
-				String headers = this.disableLoggingRequestDetails ? "" : ", headers=" + request.getHeaders();
-				logger.trace(logPrefix + formatRequest(request) + headers);
+				logger.trace(logPrefix + formatRequest(request) + ", headers=" + formatHeaders(request.getHeaders()));
 			}
 			else {
 				logger.debug(logPrefix + formatRequest(request));
@@ -256,11 +236,8 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 	}
 
 	private String formatRequest(ServerHttpRequest request) {
-		String query = "";
-		if (!this.disableLoggingRequestDetails) {
-			String rawQuery = request.getURI().getRawQuery();
-			query = StringUtils.hasText(rawQuery) ? "?" + rawQuery : "";
-		}
+		String rawQuery = request.getURI().getRawQuery();
+		String query = StringUtils.hasText(rawQuery) ? "?" + rawQuery : "";
 		return "HTTP " + request.getMethod() + " \"" + request.getPath() + query + "\"";
 	}
 
@@ -271,13 +248,17 @@ public class HttpWebHandlerAdapter extends WebHandlerDecorator implements HttpHa
 			HttpStatus status = response.getStatusCode();
 			String message = "Completed " + (status != null ? status : "200 OK");
 			if (logger.isTraceEnabled()) {
-				String headers = this.disableLoggingRequestDetails ? "" : ", headers=" + response.getHeaders();
-				logger.trace(logPrefix + message + headers);
+				logger.trace(logPrefix + message + ", headers=" + formatHeaders(response.getHeaders()));
 			}
 			else {
 				logger.debug(logPrefix + message);
 			}
 		}
+	}
+
+	private String formatHeaders(HttpHeaders responseHeaders) {
+		return this.enableLoggingRequestDetails ?
+				responseHeaders.toString() : responseHeaders.isEmpty() ? "{}" : "{masked}";
 	}
 
 	private Mono<Void> handleUnresolvedError(ServerWebExchange exchange, Throwable ex) {

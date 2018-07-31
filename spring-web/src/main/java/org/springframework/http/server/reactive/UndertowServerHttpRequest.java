@@ -60,8 +60,6 @@ class UndertowServerHttpRequest extends AbstractServerHttpRequest {
 
 	private final RequestBodyPublisher body;
 
-	private final String connectionId;
-
 
 	public UndertowServerHttpRequest(HttpServerExchange exchange, DataBufferFactory bufferFactory)
 			throws URISyntaxException {
@@ -70,7 +68,6 @@ class UndertowServerHttpRequest extends AbstractServerHttpRequest {
 		this.exchange = exchange;
 		this.body = new RequestBodyPublisher(exchange, bufferFactory);
 		this.body.registerListeners(exchange);
-		this.connectionId = ObjectUtils.getIdentityHexString(this.exchange.getConnection());
 	}
 
 	private static URI initUri(HttpServerExchange exchange) throws URISyntaxException {
@@ -132,12 +129,12 @@ class UndertowServerHttpRequest extends AbstractServerHttpRequest {
 	}
 
 	@Override
-	public String getConnectionId() {
-		return this.connectionId;
+	protected String initId() {
+		return ObjectUtils.getIdentityHexString(this.exchange.getConnection());
 	}
 
 
-	private static class RequestBodyPublisher extends AbstractListenerReadPublisher<DataBuffer> {
+	private class RequestBodyPublisher extends AbstractListenerReadPublisher<DataBuffer> {
 
 		private final StreamSourceChannel channel;
 
@@ -145,7 +142,9 @@ class UndertowServerHttpRequest extends AbstractServerHttpRequest {
 
 		private final ByteBufferPool byteBufferPool;
 
+
 		public RequestBodyPublisher(HttpServerExchange exchange, DataBufferFactory bufferFactory) {
+			super(UndertowServerHttpRequest.this.getLogPrefix());
 			this.channel = exchange.getRequestChannel();
 			this.bufferFactory = bufferFactory;
 			this.byteBufferPool = exchange.getConnection().getByteBufferPool();
@@ -180,10 +179,10 @@ class UndertowServerHttpRequest extends AbstractServerHttpRequest {
 			boolean release = true;
 			try {
 				ByteBuffer byteBuffer = pooledByteBuffer.getBuffer();
-
 				int read = this.channel.read(byteBuffer);
-				if (logger.isTraceEnabled()) {
-					logger.trace("Channel.read returned " + read + (read != -1 ? " bytes" : ""));
+
+				if (rsReadLogger.isTraceEnabled()) {
+					rsReadLogger.trace(getLogPrefix() + "Read " + read + (read != -1 ? " bytes" : ""));
 				}
 
 				if (read > 0) {

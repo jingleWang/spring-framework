@@ -18,7 +18,6 @@ package org.springframework.core.codec;
 
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 
@@ -44,7 +43,7 @@ public class DataBufferEncoder extends AbstractEncoder<DataBuffer> {
 
 	@Override
 	public boolean canEncode(ResolvableType elementType, @Nullable MimeType mimeType) {
-		Class<?> clazz = elementType.resolve(Object.class);
+		Class<?> clazz = elementType.toClass();
 		return super.canEncode(elementType, mimeType) && DataBuffer.class.isAssignableFrom(clazz);
 	}
 
@@ -55,11 +54,11 @@ public class DataBufferEncoder extends AbstractEncoder<DataBuffer> {
 
 		Flux<DataBuffer> flux = Flux.from(inputStream);
 
-		Log theLogger = Hints.getLoggerOrDefault(hints, logger);
-		if (theLogger.isDebugEnabled()) {
-			flux = flux.doOnNext(buffer ->
-					theLogger.debug(Hints.getLogPrefix(hints) +
-							"Writing " + buffer.readableByteCount() + " bytes"));
+		if (logger.isDebugEnabled() && !Hints.isLoggingSuppressed(hints)) {
+			flux = flux.doOnNext(buffer -> {
+				String logPrefix = Hints.getLogPrefix(hints);
+				logger.debug(logPrefix + "Writing " + buffer.readableByteCount() + " bytes");
+			});
 		}
 
 		return flux;

@@ -156,15 +156,17 @@ public class DefaultNamespaceHandlerResolver implements NamespaceHandlerResolver
 			synchronized (this) {
 				handlerMappings = this.handlerMappings;
 				if (handlerMappings == null) {
+					if (logger.isTraceEnabled()) {
+						logger.trace("Loading NamespaceHandler mappings from [" + this.handlerMappingsLocation + "]");
+					}
 					try {
 						Properties mappings =
 								PropertiesLoaderUtils.loadAllProperties(this.handlerMappingsLocation, this.classLoader);
-						if (logger.isDebugEnabled()) {
-							logger.debug("Loaded NamespaceHandler mappings: " + mappings);
+						if (logger.isTraceEnabled()) {
+							logger.trace("Loaded NamespaceHandler mappings: " + mappings);
 						}
-						Map<String, Object> mappingsToUse = new ConcurrentHashMap<>(mappings.size());
-						CollectionUtils.mergePropertiesIntoMap(mappings, mappingsToUse);
-						handlerMappings = mappingsToUse;
+						handlerMappings = new ConcurrentHashMap<>(mappings.size());
+						CollectionUtils.mergePropertiesIntoMap(mappings, handlerMappings);
 						this.handlerMappings = handlerMappings;
 					}
 					catch (IOException ex) {

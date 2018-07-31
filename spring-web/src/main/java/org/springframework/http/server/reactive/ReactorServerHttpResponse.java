@@ -70,15 +70,12 @@ class ReactorServerHttpResponse extends AbstractServerHttpResponse implements Ze
 
 	@Override
 	protected Mono<Void> writeWithInternal(Publisher<? extends DataBuffer> publisher) {
-		Publisher<ByteBuf> body = toByteBufs(publisher);
-		return this.response.send(body).then();
+		return this.response.send(toByteBufs(publisher)).then();
 	}
 
 	@Override
 	protected Mono<Void> writeAndFlushWithInternal(Publisher<? extends Publisher<? extends DataBuffer>> publisher) {
-		Publisher<Publisher<ByteBuf>> body = Flux.from(publisher)
-				.map(ReactorServerHttpResponse::toByteBufs);
-		return this.response.sendGroups(body).then();
+		return this.response.sendGroups(Flux.from(publisher).map(this::toByteBufs)).then();
 	}
 
 	@Override
@@ -116,7 +113,7 @@ class ReactorServerHttpResponse extends AbstractServerHttpResponse implements Ze
 		return doCommit(() -> this.response.sendFile(file, position, count).then());
 	}
 
-	private static Publisher<ByteBuf> toByteBufs(Publisher<? extends DataBuffer> dataBuffers) {
+	private Publisher<ByteBuf> toByteBufs(Publisher<? extends DataBuffer> dataBuffers) {
 		return Flux.from(dataBuffers).map(NettyDataBufferFactory::toByteBuf);
 	}
 

@@ -33,7 +33,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Flux;
 
 import org.springframework.core.io.buffer.DataBuffer;
@@ -58,9 +57,6 @@ import org.springframework.util.StringUtils;
 class ServletServerHttpRequest extends AbstractServerHttpRequest {
 
 	static final DataBuffer EOF_BUFFER = new DefaultDataBufferFactory().allocateBuffer(0);
-
-
-	protected final Log logger = LogFactory.getLog(getClass());
 
 
 	private final HttpServletRequest request;
@@ -203,9 +199,7 @@ class ServletServerHttpRequest extends AbstractServerHttpRequest {
 	@Nullable
 	DataBuffer readFromInputStream() throws IOException {
 		int read = this.request.getInputStream().read(this.buffer);
-		if (logger.isTraceEnabled()) {
-			logger.trace("InputStream.read returned " + read + (read != -1 ? " bytes" : ""));
-		}
+		logBytesRead(read);
 
 		if (read > 0) {
 			DataBuffer dataBuffer = this.bufferFactory.allocateBuffer(read);
@@ -218,6 +212,13 @@ class ServletServerHttpRequest extends AbstractServerHttpRequest {
 		}
 
 		return null;
+	}
+
+	protected final void logBytesRead(int read) {
+		Log rsReadLogger = AbstractListenerReadPublisher.rsReadLogger;
+		if (rsReadLogger.isTraceEnabled()) {
+			rsReadLogger.trace(getLogPrefix() + "Read " + read + (read != -1 ? " bytes" : ""));
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -256,6 +257,7 @@ class ServletServerHttpRequest extends AbstractServerHttpRequest {
 		private final ServletInputStream inputStream;
 
 		public RequestBodyPublisher(ServletInputStream inputStream) {
+			super(ServletServerHttpRequest.this.getLogPrefix());
 			this.inputStream = inputStream;
 		}
 

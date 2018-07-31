@@ -32,6 +32,7 @@ import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.MessageHandler;
 import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.SubscribableChannel;
+import org.springframework.messaging.simp.SimpLogging;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.broker.AbstractBrokerMessageHandler;
@@ -397,12 +398,7 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 	@Override
 	protected void startInternal() {
 		if (this.tcpClient == null) {
-			StompDecoder decoder = new StompDecoder();
-			if (this.headerInitializer != null) {
-				decoder.setHeaderInitializer(this.headerInitializer);
-			}
-			ReactorNettyCodec<byte[]> codec = new StompReactorNettyCodec(decoder);
-			this.tcpClient = new ReactorNettyTcpClient<>(this.relayHost, this.relayPort, codec);
+			this.tcpClient = initTcpClient();
 		}
 
 		if (logger.isInfoEnabled()) {
@@ -428,6 +424,17 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 
 		this.stats.incrementConnectCount();
 		this.tcpClient.connect(handler, new FixedIntervalReconnectStrategy(5000));
+	}
+
+	private ReactorNettyTcpClient<byte[]> initTcpClient() {
+		StompDecoder decoder = new StompDecoder();
+		if (this.headerInitializer != null) {
+			decoder.setHeaderInitializer(this.headerInitializer);
+		}
+		ReactorNettyCodec<byte[]> codec = new StompReactorNettyCodec(decoder);
+		ReactorNettyTcpClient<byte[]> client = new ReactorNettyTcpClient<>(this.relayHost, this.relayPort, codec);
+		client.setLogger(SimpLogging.forLog(client.getLogger()));
+		return client;
 	}
 
 	@Override
@@ -571,6 +578,8 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 
 		private final StompHeaderAccessor connectHeaders;
 
+		private final MessageChannel outboundChannel;
+
 		@Nullable
 		private volatile TcpConnection<byte[]> tcpConnection;
 
@@ -587,6 +596,7 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 			this.sessionId = sessionId;
 			this.connectHeaders = connectHeaders;
 			this.isRemoteClientSession = isClientSession;
+			this.outboundChannel = getClientOutboundChannelForSession(sessionId);
 		}
 
 		public String getSessionId() {
@@ -623,8 +633,8 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 		 * the TCP connection, failure to send a message, missed heartbeat, etc.
 		 */
 		protected void handleTcpConnectionFailure(String error, @Nullable Throwable ex) {
-			if (logger.isWarnEnabled()) {
-				logger.warn("TCP connection failure in session " + this.sessionId + ": " + error, ex);
+			if (logger.isInfoEnabled()) {
+				logger.info("TCP connection failure in session " + this.sessionId + ": " + error, ex);
 			}
 			try {
 				sendStompErrorFrameToClient(error);
@@ -653,6 +663,7 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 					accessor.setUser(user);
 				}
 				accessor.setMessage(errorText);
+				accessor.setLeaveMutable(true);
 				Message<?> errorMessage = MessageBuilder.createMessage(EMPTY_PAYLOAD, accessor.getMessageHeaders());
 				handleInboundMessage(errorMessage);
 			}
@@ -660,11 +671,7 @@ public class StompBrokerRelayMessageHandler extends AbstractBrokerMessageHandler
 
 		protected void handleInboundMessage(Message<?> message) {
 			if (this.isRemoteClientSession) {
-				MessageHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, null);
-				if (accessor != null) {
-					accessor.setImmutable();
-				}
-				StompBrokerRelayMessageHandler.this.getClientOutboundChannel().send(message);
+				this.outboundChannel.send(message);
 			}
 		}
 

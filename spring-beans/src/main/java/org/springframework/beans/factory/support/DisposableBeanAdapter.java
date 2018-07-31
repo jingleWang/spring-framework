@@ -242,8 +242,8 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 		}
 
 		if (this.invokeDisposableBean) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Invoking destroy() on bean with name '" + this.beanName + "'");
+			if (logger.isTraceEnabled()) {
+				logger.trace("Invoking destroy() on bean with name '" + this.beanName + "'");
 			}
 			try {
 				if (System.getSecurityManager() != null) {
@@ -259,10 +259,10 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 			catch (Throwable ex) {
 				String msg = "Invocation of destroy method failed on bean with name '" + this.beanName + "'";
 				if (logger.isDebugEnabled()) {
-					logger.warn(msg, ex);
+					logger.info(msg, ex);
 				}
 				else {
-					logger.warn(msg + ": " + ex);
+					logger.info(msg + ": " + ex);
 				}
 			}
 		}
@@ -314,8 +314,8 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 		if (paramTypes.length == 1) {
 			args[0] = Boolean.TRUE;
 		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("Invoking destroy method '" + this.destroyMethodName +
+		if (logger.isTraceEnabled()) {
+			logger.trace("Invoking destroy method '" + this.destroyMethodName +
 					"' on bean with name '" + this.beanName + "'");
 		}
 		try {
@@ -338,17 +338,17 @@ class DisposableBeanAdapter implements DisposableBean, Runnable, Serializable {
 			}
 		}
 		catch (InvocationTargetException ex) {
-			String msg = "Invocation of destroy method '" + this.destroyMethodName +
-					"' failed on bean with name '" + this.beanName + "'";
+			String msg = "Destroy method '" + this.destroyMethodName + "' on bean with name '" +
+					this.beanName + "' threw an exception";
 			if (logger.isDebugEnabled()) {
-				logger.warn(msg, ex.getTargetException());
+				logger.info(msg, ex.getTargetException());
 			}
 			else {
-				logger.warn(msg + ": " + ex.getTargetException());
+				logger.info(msg + ": " + ex.getTargetException());
 			}
 		}
 		catch (Throwable ex) {
-			logger.error("Couldn't invoke destroy method '" + this.destroyMethodName +
+			logger.info("Failed to invoke destroy method '" + this.destroyMethodName +
 					"' on bean with name '" + this.beanName + "'", ex);
 		}
 	}
