@@ -412,15 +412,18 @@ public class BeanDefinitionParserDelegate {
 	 */
 	@Nullable
 	public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {
-		String id = ele.getAttribute(ID_ATTRIBUTE);
-		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
+		String id = ele.getAttribute(ID_ATTRIBUTE);	//解析id
+		String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);	//解析name
 
+		//获取bean别名
+		//name可以有多个  用，隔开
 		List<String> aliases = new ArrayList<>();
 		if (StringUtils.hasLength(nameAttr)) {
 			String[] nameArr = StringUtils.tokenizeToStringArray(nameAttr, MULTI_VALUE_ATTRIBUTE_DELIMITERS);
 			aliases.addAll(Arrays.asList(nameArr));
 		}
 
+		//当存在id时 使用id作为唯一标识  当id不存在时 使用第一个name作为标识  其余name作为别名
 		String beanName = id;
 		if (!StringUtils.hasText(beanName) && !aliases.isEmpty()) {
 			beanName = aliases.remove(0);
@@ -500,28 +503,31 @@ public class BeanDefinitionParserDelegate {
 	public AbstractBeanDefinition parseBeanDefinitionElement(
 			Element ele, String beanName, @Nullable BeanDefinition containingBean) {
 
-		this.parseState.push(new BeanEntry(beanName));
+		this.parseState.push(new BeanEntry(beanName)); 	//???
 
+		//解析class
 		String className = null;
 		if (ele.hasAttribute(CLASS_ATTRIBUTE)) {
 			className = ele.getAttribute(CLASS_ATTRIBUTE).trim();
 		}
+
+		//解析parent
 		String parent = null;
 		if (ele.hasAttribute(PARENT_ATTRIBUTE)) {
 			parent = ele.getAttribute(PARENT_ATTRIBUTE);
 		}
 
 		try {
-			AbstractBeanDefinition bd = createBeanDefinition(className, parent);
+			AbstractBeanDefinition bd = createBeanDefinition(className, parent);	//构造一个GenericBeanDefinition类  根据className加载类
 
-			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
-			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
+			parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);	//解析各类参数
+			bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));	//获得描述
 
-			parseMetaElements(ele, bd);
-			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());
-			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());
+			parseMetaElements(ele, bd);	//解析<meta>
+			parseLookupOverrideSubElements(ele, bd.getMethodOverrides());	//解析<lookup-method>
+			parseReplacedMethodSubElements(ele, bd.getMethodOverrides());	//解析<replaced-method>
 
-			parseConstructorArgElements(ele, bd);
+			parseConstructorArgElements(ele, bd);	//解析构造方法参数
 			parsePropertyElements(ele, bd);
 			parseQualifierElements(ele, bd);
 
@@ -556,6 +562,7 @@ public class BeanDefinitionParserDelegate {
 	public AbstractBeanDefinition parseBeanDefinitionAttributes(Element ele, String beanName,
 			@Nullable BeanDefinition containingBean, AbstractBeanDefinition bd) {
 
+		//不再支持singleton属性，使用scope代替
 		if (ele.hasAttribute(SINGLETON_ATTRIBUTE)) {
 			error("Old 1.x 'singleton' attribute in use - upgrade to 'scope' declaration", ele);
 		}

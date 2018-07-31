@@ -94,7 +94,7 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
 		this.readerContext = readerContext;
 		logger.debug("Loading bean definitions");
-		Element root = doc.getDocumentElement();
+		Element root = doc.getDocumentElement();	//获取root节点
 		doRegisterBeanDefinitions(root);
 	}
 
@@ -147,9 +147,9 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 			}
 		}
 
-		preProcessXml(root);
-		parseBeanDefinitions(root, this.delegate);
-		postProcessXml(root);
+		preProcessXml(root);	//前置操作 子类重写方法
+		parseBeanDefinitions(root, this.delegate);	//处理BeanDefinitions
+		postProcessXml(root);	//后置操作 子类重写
 
 		this.delegate = parent;
 	}
@@ -169,38 +169,38 @@ public class DefaultBeanDefinitionDocumentReader implements BeanDefinitionDocume
 	 */
 	protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
 		if (delegate.isDefaultNamespace(root)) {
-			NodeList nl = root.getChildNodes();
+			NodeList nl = root.getChildNodes();	//获得所有子标签
 			for (int i = 0; i < nl.getLength(); i++) {
 				Node node = nl.item(i);
 				if (node instanceof Element) {
 					Element ele = (Element) node;
 					if (delegate.isDefaultNamespace(ele)) {
-						parseDefaultElement(ele, delegate);
+						parseDefaultElement(ele, delegate);	//spring默认配置
 					}
 					else {
-						delegate.parseCustomElement(ele);
+						delegate.parseCustomElement(ele);	//解析自定义配置
 					}
 				}
 			}
 		}
 		else {
-			delegate.parseCustomElement(root);
+			delegate.parseCustomElement(root);	//自定义
 		}
 	}
 
 	private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
 		if (delegate.nodeNameEquals(ele, IMPORT_ELEMENT)) {
-			importBeanDefinitionResource(ele);
+			importBeanDefinitionResource(ele);	//import标签
 		}
 		else if (delegate.nodeNameEquals(ele, ALIAS_ELEMENT)) {
-			processAliasRegistration(ele);
+			processAliasRegistration(ele);	//alias标签
 		}
 		else if (delegate.nodeNameEquals(ele, BEAN_ELEMENT)) {
-			processBeanDefinition(ele, delegate);
+			processBeanDefinition(ele, delegate);	//bean标签
 		}
 		else if (delegate.nodeNameEquals(ele, NESTED_BEANS_ELEMENT)) {
 			// recurse
-			doRegisterBeanDefinitions(ele);
+			doRegisterBeanDefinitions(ele);	//beans标签
 		}
 	}
 
