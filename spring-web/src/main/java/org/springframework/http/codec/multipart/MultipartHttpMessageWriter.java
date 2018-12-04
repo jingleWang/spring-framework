@@ -41,6 +41,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.core.log.LogFormatUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -176,10 +177,9 @@ public class MultipartHttpMessageWriter extends LoggingCodecSupport
 
 	@Override
 	public boolean canWrite(ResolvableType elementType, @Nullable MediaType mediaType) {
-		Class<?> rawClass = elementType.getRawClass();
-		return rawClass != null && MultiValueMap.class.isAssignableFrom(rawClass) &&
+		return (MultiValueMap.class.isAssignableFrom(elementType.toClass()) &&
 				(mediaType == null ||
-						this.supportedMediaTypes.stream().anyMatch(m -> m.isCompatibleWith(mediaType)));
+						this.supportedMediaTypes.stream().anyMatch(element -> element.isCompatibleWith(mediaType))));
 	}
 
 	@Override
@@ -225,11 +225,10 @@ public class MultipartHttpMessageWriter extends LoggingCodecSupport
 
 		outputMessage.getHeaders().setContentType(new MediaType(MediaType.MULTIPART_FORM_DATA, params));
 
-		if (logger.isDebugEnabled()) {
-			String details = isEnableLoggingRequestDetails() ?
-					map.toString() : "parts " + map.keySet() + " (content masked)";
-			logger.debug(Hints.getLogPrefix(hints) + "Encoding " + details);
-		}
+		LogFormatUtils.traceDebug(logger, traceOn -> Hints.getLogPrefix(hints) + "Encoding " +
+				(isEnableLoggingRequestDetails() ?
+						LogFormatUtils.formatValue(map, !traceOn) :
+						"parts " + map.keySet() + " (content masked)"));
 
 		Flux<DataBuffer> body = Flux.fromIterable(map.entrySet())
 				.concatMap(entry -> encodePartValues(boundary, entry.getKey(), entry.getValue()))
@@ -281,7 +280,7 @@ public class MultipartHttpMessageWriter extends LoggingCodecSupport
 			if (body instanceof Resource) {
 				outputHeaders.setContentDispositionFormData(name, ((Resource) body).getFilename());
 			}
-			else if (Resource.class.equals(resolvableType.getRawClass())) {
+			else if (resolvableType.resolve() == Resource.class) {
 				body = (T) Mono.from((Publisher<?>) body).doOnNext(o -> outputHeaders
 						.setContentDispositionFormData(name, ((Resource) o).getFilename()));
 			}

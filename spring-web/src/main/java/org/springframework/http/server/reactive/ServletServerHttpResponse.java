@@ -33,6 +33,8 @@ import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.lang.Nullable;
@@ -62,11 +64,16 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 
 	private final ServletServerHttpRequest request;
 
-
 	public ServletServerHttpResponse(HttpServletResponse response, AsyncContext asyncContext,
 			DataBufferFactory bufferFactory, int bufferSize, ServletServerHttpRequest request) throws IOException {
 
-		super(bufferFactory);
+		this(new HttpHeaders(), response, asyncContext, bufferFactory, bufferSize, request);
+	}
+
+	public ServletServerHttpResponse(HttpHeaders headers, HttpServletResponse response, AsyncContext asyncContext,
+			DataBufferFactory bufferFactory, int bufferSize, ServletServerHttpRequest request) throws IOException {
+
+		super(bufferFactory, headers);
 
 		Assert.notNull(response, "HttpServletResponse must not be null");
 		Assert.notNull(bufferFactory, "DataBufferFactory must not be null");
@@ -88,6 +95,12 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 	@Override
 	public <T> T getNativeResponse() {
 		return (T) this.response;
+	}
+
+	@Override
+	public HttpStatus getStatusCode() {
+		HttpStatus httpStatus = super.getStatusCode();
+		return httpStatus != null ? httpStatus : HttpStatus.resolve(this.response.getStatus());
 	}
 
 	@Override
@@ -328,6 +341,7 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 			boolean ready = ServletServerHttpResponse.this.isWritePossible();
 			int remaining = dataBuffer.readableByteCount();
 			if (ready && remaining > 0) {
+				// In case of IOException, onError handling should call discardData(DataBuffer)..
 				int written = writeToOutputStream(dataBuffer);
 				if (logger.isTraceEnabled()) {
 					logger.trace(getLogPrefix() + "Wrote " + written + " of " + remaining + " bytes");
@@ -352,6 +366,11 @@ class ServletServerHttpResponse extends AbstractListenerServerHttpResponse {
 		@Override
 		protected void writingComplete() {
 			bodyProcessor = null;
+		}
+
+		@Override
+		protected void discardData(DataBuffer dataBuffer) {
+			DataBufferUtils.release(dataBuffer);
 		}
 	}
 

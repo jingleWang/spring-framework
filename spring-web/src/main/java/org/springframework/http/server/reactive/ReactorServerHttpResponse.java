@@ -30,6 +30,8 @@ import reactor.netty.http.server.HttpServerResponse;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ZeroCopyHttpOutputMessage;
 import org.springframework.util.Assert;
@@ -47,7 +49,7 @@ class ReactorServerHttpResponse extends AbstractServerHttpResponse implements Ze
 
 
 	public ReactorServerHttpResponse(HttpServerResponse response, DataBufferFactory bufferFactory) {
-		super(bufferFactory);
+		super(bufferFactory, new HttpHeaders(new NettyHeadersAdapter(response.responseHeaders())));
 		Assert.notNull(response, "HttpServerResponse must not be null");
 		this.response = response;
 	}
@@ -59,12 +61,23 @@ class ReactorServerHttpResponse extends AbstractServerHttpResponse implements Ze
 		return (T) this.response;
 	}
 
+	@Override
+	@SuppressWarnings("ConstantConditions")
+	public HttpStatus getStatusCode() {
+		HttpStatus httpStatus = super.getStatusCode();
+		if (httpStatus == null) {
+			HttpResponseStatus status = this.response.status();
+			httpStatus = status != null ? HttpStatus.resolve(status.code()) : null;
+		}
+		return httpStatus;
+	}
+
 
 	@Override
 	protected void applyStatusCode() {
 		Integer statusCode = getStatusCodeValue();
 		if (statusCode != null) {
-			this.response.status(HttpResponseStatus.valueOf(statusCode));
+			this.response.status(statusCode);
 		}
 	}
 
@@ -80,11 +93,6 @@ class ReactorServerHttpResponse extends AbstractServerHttpResponse implements Ze
 
 	@Override
 	protected void applyHeaders() {
-		getHeaders().forEach((headerName, headerValues) -> {
-			for (String value : headerValues) {
-				this.response.responseHeaders().add(headerName, value);
-			}
-		});
 	}
 
 	@Override

@@ -199,7 +199,7 @@ public interface WebTestClient {
 	 * without an HTTP server using a mock request and response.
 	 * <p>Consider using the TestContext framework and
 	 * {@link org.springframework.test.context.ContextConfiguration @ContextConfiguration}
-	 * in order to efficently load and inject the Spring configuration into the
+	 * in order to efficiently load and inject the Spring configuration into the
 	 * test class.
 	 * @param applicationContext the Spring context
 	 * @return chained API to customize server and client config; use
@@ -363,8 +363,10 @@ public interface WebTestClient {
 
 
 	/**
-	 * Steps for customizing the {@link WebClient} used to test with
-	 * internally delegating to a {@link WebClient.Builder}.
+	 * Steps for customizing the {@link WebClient} used to test with,
+	 * internally delegating to a
+	 * {@link org.springframework.web.reactive.function.client.WebClient.Builder
+	 * WebClient.Builder}.
 	 */
 	interface Builder {
 
@@ -447,8 +449,9 @@ public interface WebTestClient {
 		Builder responseTimeout(Duration timeout);
 
 		/**
-		 * Apply the given {@code Consumer} to this builder instance.
+		 * Apply the given configurer to this builder instance.
 		 * <p>This can be useful for applying pre-packaged customizations.
+		 * @param configurer the configurer to apply
 		 */
 		Builder apply(WebTestClientConfigurer configurer);
 

@@ -35,6 +35,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourceRegion;
+import org.springframework.core.log.LogFormatUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpOutputMessage;
@@ -280,10 +281,9 @@ public abstract class AbstractMessageConverterMethodProcessor extends AbstractMe
 							(Class<? extends HttpMessageConverter<?>>) converter.getClass(),
 							inputMessage, outputMessage);
 					if (body != null) {
-						if (logger.isDebugEnabled()) {
-							Object formatted = (body instanceof CharSequence ? "\"" + body + "\"" : body);
-							logger.debug("Writing [" + formatted + "]");
-						}
+						Object theBody = body;
+						LogFormatUtils.traceDebug(logger, traceOn ->
+								"Writing [" + LogFormatUtils.formatValue(theBody, traceOn) + "]");
 						addContentDispositionHeader(inputMessage, outputMessage);
 						if (genericConverter != null) {
 							genericConverter.write(body, targetType, selectedMediaType, outputMessage);
