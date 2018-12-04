@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import kotlin.reflect.KFunction;
@@ -732,8 +733,16 @@ public class MethodParameter {
 	protected static int findParameterIndex(Parameter parameter) {
 		Executable executable = parameter.getDeclaringExecutable();
 		Parameter[] allParams = executable.getParameters();
+		// Try first with identity checks for greater performance.
 		for (int i = 0; i < allParams.length; i++) {
 			if (parameter == allParams[i]) {
+				return i;
+			}
+		}
+		// Potentially try again with object equality checks in order to avoid race
+		// conditions while invoking java.lang.reflect.Executable.getParameters().
+		for (int i = 0; i < allParams.length; i++) {
+			if (parameter.equals(allParams[i])) {
 				return i;
 			}
 		}
@@ -768,17 +777,21 @@ public class MethodParameter {
 			}
 			else {
 				KFunction<?> function = null;
+				Predicate<KParameter> predicate = null;
 				if (method != null) {
 					function = ReflectJvmMapping.getKotlinFunction(method);
+					predicate = p -> KParameter.Kind.VALUE.equals(p.getKind());
 				}
 				else if (ctor != null) {
 					function = ReflectJvmMapping.getKotlinFunction(ctor);
+					predicate = p -> KParameter.Kind.VALUE.equals(p.getKind()) ||
+							KParameter.Kind.INSTANCE.equals(p.getKind());
 				}
 				if (function != null) {
 					List<KParameter> parameters = function.getParameters();
 					KParameter parameter = parameters
 							.stream()
-							.filter(p -> KParameter.Kind.VALUE.equals(p.getKind()))
+							.filter(predicate)
 							.collect(Collectors.toList())
 							.get(index);
 					return (parameter.getType().isMarkedNullable() || parameter.isOptional());

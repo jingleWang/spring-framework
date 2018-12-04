@@ -43,10 +43,18 @@ import org.springframework.web.reactive.protobuf.SecondMsg;
  */
 public class ProtobufIntegrationTests extends AbstractRequestMappingIntegrationTests {
 
-	public static final Msg TEST_MSG = Msg.newBuilder().setFoo("Foo").setBlah(SecondMsg.newBuilder().setBlah(123).build()).build();
+	public static final Msg TEST_MSG =
+			Msg.newBuilder().setFoo("Foo").setBlah(SecondMsg.newBuilder().setBlah(123).build()).build();
 
 	private WebClient webClient;
 
+
+	@Override
+	@Before
+	public void setup() throws Exception {
+		super.setup();
+		this.webClient = WebClient.create("http://localhost:" + this.port);
+	}
 
 	@Override
 	protected ApplicationContext initApplicationContext() {
@@ -56,12 +64,6 @@ public class ProtobufIntegrationTests extends AbstractRequestMappingIntegrationT
 		return wac;
 	}
 
-	@Override
-	@Before
-	public void setup() throws Exception {
-		super.setup();
-		this.webClient = WebClient.create("http://localhost:" + this.port);
-	}
 
 	@Test
 	public void value() {
@@ -129,6 +131,18 @@ public class ProtobufIntegrationTests extends AbstractRequestMappingIntegrationT
 				.verifyComplete();
 	}
 
+	@Test
+	public void defaultInstance() {
+		Mono<Msg> result = this.webClient.get()
+				.uri("/default-instance")
+				.retrieve()
+				.bodyToMono(Msg.class);
+
+		StepVerifier.create(result)
+				.verifyComplete();
+	}
+
+
 	@RestController
 	@SuppressWarnings("unused")
 	static class ProtobufController {
@@ -145,7 +159,8 @@ public class ProtobufIntegrationTests extends AbstractRequestMappingIntegrationT
 
 		@GetMapping(value = "/message-stream", produces = "application/x-protobuf;delimited=true")
 		Flux<Msg> messageStream() {
-			return testInterval(Duration.ofMillis(50), 5).map(l -> Msg.newBuilder().setFoo("Foo").setBlah(SecondMsg.newBuilder().setBlah(l.intValue()).build()).build());
+			return testInterval(Duration.ofMillis(50), 5).map(l ->
+					Msg.newBuilder().setFoo("Foo").setBlah(SecondMsg.newBuilder().setBlah(l.intValue()).build()).build());
 		}
 
 		@GetMapping("/empty")
@@ -153,7 +168,12 @@ public class ProtobufIntegrationTests extends AbstractRequestMappingIntegrationT
 			return Mono.empty();
 		}
 
+		@GetMapping("default-instance")
+		Mono<Msg> defaultInstance() {
+			return Mono.just(Msg.getDefaultInstance());
+		}
 	}
+
 
 	@Configuration
 	@EnableWebFlux
@@ -161,4 +181,5 @@ public class ProtobufIntegrationTests extends AbstractRequestMappingIntegrationT
 	@SuppressWarnings("unused")
 	static class TestConfiguration {
 	}
+
 }

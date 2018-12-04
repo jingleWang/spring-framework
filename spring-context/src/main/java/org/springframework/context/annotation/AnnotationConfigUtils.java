@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -159,7 +158,7 @@ public abstract class AnnotationConfigUtils {
 			}
 		}
 
-		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(4);
+		Set<BeanDefinitionHolder> beanDefs = new LinkedHashSet<>(8);
 
 		if (!registry.containsBeanDefinition(CONFIGURATION_ANNOTATION_PROCESSOR_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition(ConfigurationClassPostProcessor.class);
@@ -200,6 +199,7 @@ public abstract class AnnotationConfigUtils {
 			def.setSource(source);
 			beanDefs.add(registerPostProcessor(registry, def, EVENT_LISTENER_PROCESSOR_BEAN_NAME));
 		}
+
 		if (!registry.containsBeanDefinition(EVENT_LISTENER_FACTORY_BEAN_NAME)) {
 			RootBeanDefinition def = new RootBeanDefinition(DefaultEventListenerFactory.class);
 			def.setSource(source);
@@ -254,16 +254,13 @@ public abstract class AnnotationConfigUtils {
 			abd.setDependsOn(dependsOn.getStringArray("value"));
 		}
 
-		if (abd instanceof AbstractBeanDefinition) {
-			AbstractBeanDefinition absBd = (AbstractBeanDefinition) abd;
-			AnnotationAttributes role = attributesFor(metadata, Role.class);
-			if (role != null) {
-				absBd.setRole(role.getNumber("value").intValue());
-			}
-			AnnotationAttributes description = attributesFor(metadata, Description.class);
-			if (description != null) {
-				absBd.setDescription(description.getString("value"));
-			}
+		AnnotationAttributes role = attributesFor(metadata, Role.class);
+		if (role != null) {
+			abd.setRole(role.getNumber("value").intValue());
+		}
+		AnnotationAttributes description = attributesFor(metadata, Description.class);
+		if (description != null) {
+			abd.setDescription(description.getString("value"));
 		}
 	}
 

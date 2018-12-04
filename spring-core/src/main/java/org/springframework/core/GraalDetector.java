@@ -14,31 +14,26 @@
  * limitations under the License.
  */
 
-package org.springframework.messaging.support;
-
-import reactor.core.publisher.Mono;
-
-import org.springframework.lang.Nullable;
+package org.springframework.core;
 
 /**
- * A Mono-to-ListenableFuture adapter where the source and the target from
- * the Promise and the ListenableFuture respectively are of the same type.
+ * A common delegate for detecting a GraalVM native image environment.
  *
- * @author Rossen Stoyanchev
- * @author Stephane Maldini
- * @since 5.0
- * @param <T> the object type
+ * @author Juergen Hoeller
+ * @author Sebastien Deleuze
+ * @since 5.1
  */
-public class MonoToListenableFutureAdapter<T> extends AbstractMonoToListenableFutureAdapter<T, T> {
+abstract class GraalDetector {
 
-	public MonoToListenableFutureAdapter(Mono<T> mono) {
-		super(mono);
-	}
+	// See https://github.com/oracle/graal/blob/master/sdk/src/org.graalvm.nativeimage/src/org/graalvm/nativeimage/ImageInfo.java
+	private static final boolean imageCode = (System.getProperty("org.graalvm.nativeimage.imagecode") != null);
 
-	@Override
-	@Nullable
-	protected T adapt(@Nullable T result) {
-		return result;
+
+	/**
+	 * Return whether this runtime environment lives within a native image.
+	 */
+	public static boolean inImageCode() {
+		return imageCode;
 	}
 
 }

@@ -192,7 +192,7 @@ public interface DataBuffer {
 	 * Write at most {@code length} bytes of the given source into this buffer, starting
 	 * at the current writing position of this buffer.
 	 * @param source the bytes to be written into this buffer
-	 * @param offset the index withing {@code source} to start writing from
+	 * @param offset the index within {@code source} to start writing from
 	 * @param length the maximum number of bytes to be written from {@code source}
 	 * @return this buffer
 	 */
@@ -220,6 +220,9 @@ public interface DataBuffer {
 	 * data buffer's content.  Data between this data buffer and the returned buffer is
 	 * shared; though changes in the returned buffer's position will not be reflected
 	 * in the reading nor writing position of this data buffer.
+	 * <p><strong>Note</strong> that this method will <strong>not</strong> call
+	 * {@link DataBufferUtils#retain(DataBuffer)} on the resulting slice: the reference
+	 * count will not be increased.
 	 * @param index the index at which to start the slice
 	 * @param length the length of the slice
 	 * @return the specified slice of this data buffer

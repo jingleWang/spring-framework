@@ -28,6 +28,7 @@ import reactor.core.publisher.Flux;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.core.log.LogFormatUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
@@ -68,9 +69,11 @@ public final class CharSequenceEncoder extends AbstractEncoder<CharSequence> {
 		Charset charset = getCharset(mimeType);
 
 		return Flux.from(inputStream).map(charSequence -> {
-			if (logger.isDebugEnabled() && !Hints.isLoggingSuppressed(hints)) {
-				String logPrefix = Hints.getLogPrefix(hints);
-				logger.debug(logPrefix + "Writing '" + charSequence + "'");
+			if (!Hints.isLoggingSuppressed(hints)) {
+				LogFormatUtils.traceDebug(logger, traceOn -> {
+					String formatted = LogFormatUtils.formatValue(charSequence, !traceOn);
+					return Hints.getLogPrefix(hints) + "Writing " + formatted;
+				});
 			}
 			CharBuffer charBuffer = CharBuffer.wrap(charSequence);
 			ByteBuffer byteBuffer = charset.encode(charBuffer);
@@ -79,15 +82,14 @@ public final class CharSequenceEncoder extends AbstractEncoder<CharSequence> {
 	}
 
 	private Charset getCharset(@Nullable MimeType mimeType) {
-		Charset charset;
 		if (mimeType != null && mimeType.getCharset() != null) {
-			charset = mimeType.getCharset();
+			return mimeType.getCharset();
 		}
 		else {
-			charset = DEFAULT_CHARSET;
+			return DEFAULT_CHARSET;
 		}
-		return charset;
 	}
+
 
 	/**
 	 * Create a {@code CharSequenceEncoder} that supports only "text/plain".

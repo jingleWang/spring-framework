@@ -47,7 +47,6 @@ import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.cglib.proxy.NoOp;
 import org.springframework.cglib.transform.ClassEmitterTransformer;
 import org.springframework.cglib.transform.TransformingClassGenerator;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisException;
 import org.springframework.objenesis.SpringObjenesis;
@@ -189,8 +188,8 @@ class ConfigurationClassEnhancer {
 		@Override
 		public int accept(Method method) {
 			for (int i = 0; i < this.callbacks.length; i++) {
-				if (!(this.callbacks[i] instanceof ConditionalCallback) ||
-						((ConditionalCallback) this.callbacks[i]).isMatch(method)) {
+				Callback callback = this.callbacks[i];
+				if (!(callback instanceof ConditionalCallback) || ((ConditionalCallback) callback).isMatch(method)) {
 					return i;
 				}
 			}
@@ -286,6 +285,10 @@ class ConfigurationClassEnhancer {
 
 		@Override
 		public boolean isMatch(Method candidateMethod) {
+			return isSetBeanFactory(candidateMethod);
+		}
+
+		public static boolean isSetBeanFactory(Method candidateMethod) {
 			return (candidateMethod.getName().equals("setBeanFactory") &&
 					candidateMethod.getParameterCount() == 1 &&
 					BeanFactory.class == candidateMethod.getParameterTypes()[0] &&
@@ -317,8 +320,7 @@ class ConfigurationClassEnhancer {
 			String beanName = BeanAnnotationHelper.determineBeanNameFor(beanMethod);
 
 			// Determine whether this bean is a scoped-proxy
-			Scope scope = AnnotatedElementUtils.findMergedAnnotation(beanMethod, Scope.class);
-			if (scope != null && scope.proxyMode() != ScopedProxyMode.NO) {
+			if (BeanAnnotationHelper.isScopedProxy(beanMethod)) {
 				String scopedBeanName = ScopedProxyCreator.getTargetBeanName(beanName);
 				if (beanFactory.isCurrentlyInCreation(scopedBeanName)) {
 					beanName = scopedBeanName;
@@ -391,6 +393,7 @@ class ConfigurationClassEnhancer {
 				Object beanInstance = (useArgs ? beanFactory.getBean(beanName, beanMethodArgs) :
 						beanFactory.getBean(beanName));
 				if (!ClassUtils.isAssignableValue(beanMethod.getReturnType(), beanInstance)) {
+					// Detect package-protected NullBean instance through equals(null) check
 					if (beanInstance.equals(null)) {
 						if (logger.isDebugEnabled()) {
 							logger.debug(String.format("@Bean method %s.%s called as bean reference " +
@@ -432,6 +435,7 @@ class ConfigurationClassEnhancer {
 		@Override
 		public boolean isMatch(Method candidateMethod) {
 			return (candidateMethod.getDeclaringClass() != Object.class &&
+					!BeanFactoryAwareMethodInterceptor.isSetBeanFactory(candidateMethod) &&
 					BeanAnnotationHelper.isBeanAnnotated(candidateMethod));
 		}
 

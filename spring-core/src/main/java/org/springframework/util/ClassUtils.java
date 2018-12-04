@@ -121,10 +121,11 @@ public abstract class ClassUtils {
 		primitiveWrapperTypeMap.put(Long.class, long.class);
 		primitiveWrapperTypeMap.put(Short.class, short.class);
 
-		primitiveWrapperTypeMap.forEach((key, value) -> {
-			primitiveTypeToWrapperMap.put(value, key);
-			registerCommonClasses(key);
-		});
+		// Map entry iteration is less expensive to initialize than forEach with lambdas
+		for (Map.Entry<Class<?>, Class<?>> entry : primitiveWrapperTypeMap.entrySet()) {
+			primitiveTypeToWrapperMap.put(entry.getValue(), entry.getKey());
+			registerCommonClasses(entry.getKey());
+		}
 
 		Set<Class<?>> primitiveTypes = new HashSet<>(32);
 		primitiveTypes.addAll(primitiveWrapperTypeMap.values());
@@ -271,7 +272,7 @@ public abstract class ClassUtils {
 			clToUse = getDefaultClassLoader();
 		}
 		try {
-			return (clToUse != null ? clToUse.loadClass(name) : Class.forName(name));
+			return Class.forName(name, false, clToUse);
 		}
 		catch (ClassNotFoundException ex) {
 			int lastDotIndex = name.lastIndexOf(PACKAGE_SEPARATOR);
@@ -279,7 +280,7 @@ public abstract class ClassUtils {
 				String innerClassName =
 						name.substring(0, lastDotIndex) + INNER_CLASS_SEPARATOR + name.substring(lastDotIndex + 1);
 				try {
-					return (clToUse != null ? clToUse.loadClass(innerClassName) : Class.forName(innerClassName));
+					return Class.forName(innerClassName, false, clToUse);
 				}
 				catch (ClassNotFoundException ex2) {
 					// Swallow - let original exception get through

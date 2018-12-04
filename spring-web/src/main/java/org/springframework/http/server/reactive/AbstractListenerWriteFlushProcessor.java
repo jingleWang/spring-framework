@@ -49,7 +49,8 @@ public abstract class AbstractListenerWriteFlushProcessor<T> implements Processo
 	 * @see AbstractListenerWriteProcessor#rsWriteLogger
 	 * @see WriteResultPublisher#rsWriteResultLogger
 	 */
-	protected static final Log rsWriteFlushLogger = LogDelegateFactory.getHiddenLog(AbstractListenerWriteFlushProcessor.class);
+	protected static final Log rsWriteFlushLogger =
+			LogDelegateFactory.getHiddenLog(AbstractListenerWriteFlushProcessor.class);
 
 
 	private final AtomicReference<State> state = new AtomicReference<>(State.UNSUBSCRIBED);
@@ -127,7 +128,7 @@ public abstract class AbstractListenerWriteFlushProcessor<T> implements Processo
 	}
 
 	/**
-	 * Invoked when flusing is possible, either in the same thread after a check
+	 * Invoked when flushing is possible, either in the same thread after a check
 	 * via {@link #isWritePossible()}, or as a callback from the underlying
 	 * container.
 	 */
