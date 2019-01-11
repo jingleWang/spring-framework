@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
  * @author Chris Beams
  * @author Juergen Hoeller
  * @since 3.1
- * @see org.springframework.core.io.Resource
+ * @see or—g.springframework.core.io.Resource
  * @see org.springframework.core.io.support.EncodedResource
  */
 public class ResourcePropertySource extends PropertiesPropertySource {

@@ -269,6 +269,7 @@ public abstract class AbstractPropertyResolver implements ConfigurablePropertyRe
 	 * i.e. without resolution of nested placeholders.
 	 * @param key the property name to resolve
 	 * @return the property value or {@code null} if none found
+	 * 将property 最为string返回 忽略嵌套property
 	 */
 	@Nullable
 	protected abstract String getPropertyAsRawString(String key);

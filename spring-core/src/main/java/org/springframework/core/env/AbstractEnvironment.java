@@ -293,6 +293,7 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	protected Set<String> doGetDefaultProfiles() {
 		synchronized (this.defaultProfiles) {
 			if (this.defaultProfiles.equals(getReservedDefaultProfiles())) {
+				//检查是否配置spring.profiles.default， 如果是则使用配置的profile作为默认profile
 				String profiles = getProperty(DEFAULT_PROFILES_PROPERTY_NAME);
 				if (StringUtils.hasText(profiles)) {
 					setDefaultProfiles(StringUtils.commaDelimitedListToStringArray(
@@ -315,9 +316,9 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 	public void setDefaultProfiles(String... profiles) {
 		Assert.notNull(profiles, "Profile array must not be null");
 		synchronized (this.defaultProfiles) {
-			this.defaultProfiles.clear();
+			this.defaultProfiles.clear();	//清除default
 			for (String profile : profiles) {
-				validateProfile(profile);
+				validateProfile(profile);	//验证profile，如果为空或者以！开头则抛出异常 IllegalArgumentException
 				this.defaultProfiles.add(profile);
 			}
 		}

@@ -61,7 +61,9 @@ public class ClassPathXmlApplicationContextTests {
 	private static final String FQ_CONTEXT_B = PATH + CONTEXT_B;
 	private static final String FQ_CONTEXT_C = PATH + CONTEXT_C;
 	private static final String SIMPLE_CONTEXT = "simpleContext.xml";
+	private static final String SIMPLE_CONTEXT1 = "simpleContext1.xml";
 	private static final String FQ_SIMPLE_CONTEXT = PATH + "simpleContext.xml";
+	private static final String FQ_SIMPLE_CONTEXT1 = PATH + "simpleContext1.xml";
 	private static final String FQ_ALIASED_CONTEXT_C = PATH + "test/aliased-contextC.xml";
 	private static final String INVALID_VALUE_TYPE_CONTEXT = PATH + "invalidValueType.xml";
 	private static final String CHILD_WITH_PROXY_CONTEXT = PATH + "childWithProxy.xml";
@@ -75,8 +77,20 @@ public class ClassPathXmlApplicationContextTests {
 	@Test
 	public void testSingleConfigLocation() {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(FQ_SIMPLE_CONTEXT);
-		assertTrue(ctx.containsBean("someMessageSource"));
+
+//		assertTrue(ctx.containsBean("someMessageSource"));
+		System.out.println(ctx.getBean("bString"));
 		ctx.close();
+	}
+
+	@Test
+	public void testSingleConfigLocation2() {
+		ClassPathXmlApplicationContext ctx1 = new ClassPathXmlApplicationContext(FQ_SIMPLE_CONTEXT);
+
+		ClassPathXmlApplicationContext ctx2 = new ClassPathXmlApplicationContext(new String[] {FQ_SIMPLE_CONTEXT1}, ctx1);
+//		assertTrue(ctx.containsBean("someMessageSource"));
+		System.out.println(ctx1.getBean("aString"));
+		ctx2.close();
 	}
 
 	@Test

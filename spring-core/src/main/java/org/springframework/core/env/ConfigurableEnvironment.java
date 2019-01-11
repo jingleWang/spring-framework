@@ -83,6 +83,8 @@ public interface ConfigurableEnvironment extends Environment, ConfigurableProper
 	 * @see #setDefaultProfiles
 	 * @see org.springframework.context.annotation.Profile
 	 * @see AbstractEnvironment#ACTIVE_PROFILES_PROPERTY_NAME
+	 *
+	 * 清空set重新添加
 	 */
 	void setActiveProfiles(String... profiles);
 
@@ -90,6 +92,7 @@ public interface ConfigurableEnvironment extends Environment, ConfigurableProper
 	 * Add a profile to the current set of active profiles.
 	 * @throws IllegalArgumentException if the profile is null, empty or whitespace-only
 	 * @see #setActiveProfiles
+	 * 在原有的基础上添加
 	 */
 	void addActiveProfile(String profile);
 

@@ -14,15 +14,9 @@
 	<!--<bean class="org.springframework.context.support.ClassPathXmlApplicationContext" lazy-init="true">-->
 		<!--<constructor-arg value="someNonExistentFile.xml"/>-->
 	<!--</bean>-->
-	<bean name="${alias}" id="aString" class="java.lang.String">
-		<description>test</description>
+
+	<bean id="aString" class="java.lang.String">
 		<constructor-arg type="java.lang.String" value="${aString}"/>
 	</bean>
-
-	<bean id="bString" class="java.lang.String">
-		<constructor-arg type="java.lang.String" ref="${aliasb}"/>
-	</bean>
-
-
 
 </beans>

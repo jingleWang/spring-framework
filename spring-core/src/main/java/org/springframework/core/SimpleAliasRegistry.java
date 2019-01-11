@@ -35,6 +35,8 @@ import org.springframework.util.StringValueResolver;
  * {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
  * implementations.
  *
+ * 别名注册中心实现类
+ *
  * @author Juergen Hoeller
  * @since 2.5.2
  */
@@ -44,7 +46,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/** Map from alias to canonical name. */
-	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
+	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16); //<alias, name>
 
 
 	@Override
@@ -53,6 +55,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		Assert.hasText(alias, "'alias' must not be empty");
 		synchronized (this.aliasMap) {
 			if (alias.equals(name)) {
+				//如果alias和name一样则忽略
 				this.aliasMap.remove(alias);
 				if (logger.isDebugEnabled()) {
 					logger.debug("Alias definition '" + alias + "' ignored since it points to same name");
@@ -61,6 +64,8 @@ public class SimpleAliasRegistry implements AliasRegistry {
 			else {
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
+					//已经存在alias时，如果name一样则忽略本次注册
+					//如果不一样，且允许重写则将覆盖原有的alias， 否则抛出异常
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
 						return;

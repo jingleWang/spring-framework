@@ -41,7 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import javax.inject.Provider;
+import org.gradle.model.internal.report.AmbiguousBindingReporter.Provider;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
@@ -879,6 +879,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		Assert.notNull(beanDefinition, "BeanDefinition must not be null");
 
 		if (beanDefinition instanceof AbstractBeanDefinition) {
+		// 如果是AbstractBeanDefinition的子类 则进行验证
 			try {
 				((AbstractBeanDefinition) beanDefinition).validate();
 			}
@@ -890,7 +891,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 
 		BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
 		if (existingDefinition != null) {
+			//如果已经存在beanName
 			if (!isAllowBeanDefinitionOverriding()) {
+				//不支持beanDefinition重写
 				throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
 			}
 			else if (existingDefinition.getRole() < beanDefinition.getRole()) {
@@ -919,6 +922,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 		else {
 			if (hasBeanCreationStarted()) {
+				//当bean已经开始实例化时，为了保证实例化是对注册的beanDefinition遍历的稳定性，
+				//不再对beanDefinitionNames进行直接修改
+				//而是新建一个list
 				// Cannot modify startup-time collection elements anymore (for stable iteration)
 				synchronized (this.beanDefinitionMap) {
 					this.beanDefinitionMap.put(beanName, beanDefinition);
@@ -943,6 +949,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 		}
 
 		if (existingDefinition != null || containsSingleton(beanName)) {
+			//如果当前beanDefinition已经被初始化，则重置初始化的Bean
 			resetBeanDefinition(beanName);
 		}
 	}

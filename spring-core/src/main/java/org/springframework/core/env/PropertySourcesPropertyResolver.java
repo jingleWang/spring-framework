@@ -78,6 +78,7 @@ public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 	protected <T> T getProperty(String key, Class<T> targetValueType, boolean resolveNestedPlaceholders) {
 		if (this.propertySources != null) {
 			for (PropertySource<?> propertySource : this.propertySources) {
+				//依次在注册的propertySource总寻找
 				if (logger.isTraceEnabled()) {
 					logger.trace("Searching for key '" + key + "' in PropertySource '" +
 							propertySource.getName() + "'");
@@ -85,10 +86,11 @@ public class PropertySourcesPropertyResolver extends AbstractPropertyResolver {
 				Object value = propertySource.getProperty(key);
 				if (value != null) {
 					if (resolveNestedPlaceholders && value instanceof String) {
+						//解析嵌套placeholder
 						value = resolveNestedPlaceholders((String) value);
 					}
 					logKeyFound(key, propertySource, value);
-					return convertValueIfNecessary(value, targetValueType);
+					return convertValueIfNecessary(value, targetValueType);		//类型转换
 				}
 			}
 		}
