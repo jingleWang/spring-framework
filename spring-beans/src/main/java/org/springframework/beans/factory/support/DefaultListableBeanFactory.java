@@ -41,7 +41,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
-import org.gradle.model.internal.report.AmbiguousBindingReporter.Provider;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
@@ -79,6 +78,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.CompositeIterator;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+
+import javax.inject.Provider;
 
 /**
  * Spring's default implementation of the {@link ConfigurableListableBeanFactory}
