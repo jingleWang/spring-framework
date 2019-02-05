@@ -8,20 +8,23 @@
 	<context:property-placeholder ignore-unresolvable="true"
 								  location="org/springframework/context/support/simpleContext.properties"/>
 
+	<context:property-placeholder ignore-unresolvable="true"
+								  location="org/springframework/context/support/more-messages.properties"/>
+
+
 	<!--<bean id="someMessageSource" name="yourMessageSource"-->
 		  <!--class="org.springframework.context.support.StaticMessageSource"/>-->
 
 	<!--<bean class="org.springframework.context.support.ClassPathXmlApplicationContext" lazy-init="true">-->
 		<!--<constructor-arg value="someNonExistentFile.xml"/>-->
 	<!--</bean>-->
-	<bean name="${alias}" id="aString" class="java.lang.String">
-		<description>test</description>
+	<bean name="${alias}" id="beanName" class="java.lang.String">
 		<constructor-arg type="java.lang.String" value="${aString}"/>
 	</bean>
 
-	<bean id="bString" class="java.lang.String">
-		<constructor-arg type="java.lang.String" ref="${aliasb}"/>
-	</bean>
+	<!--<bean id="bString" class="java.lang.String">-->
+		<!--<constructor-arg type="java.lang.String" ref="${aliasb}"/>-->
+	<!--</bean>-->
 
 
 

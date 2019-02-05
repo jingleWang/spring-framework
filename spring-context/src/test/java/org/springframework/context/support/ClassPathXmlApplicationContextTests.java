@@ -79,7 +79,7 @@ public class ClassPathXmlApplicationContextTests {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(FQ_SIMPLE_CONTEXT);
 
 //		assertTrue(ctx.containsBean("someMessageSource"));
-		System.out.println(ctx.getBean("bString"));
+		System.out.println(ctx.getBean("beanName"));
 		ctx.close();
 	}
 
