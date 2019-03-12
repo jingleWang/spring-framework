@@ -1126,7 +1126,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		if (mbd.getFactoryMethodName() != null) {
-			return instantiateUsingFactoryMethod(beanName, mbd, args);	//通过制定的factory method来创建bean
+			return instantiateUsingFactoryMethod(beanName, mbd, args);	//通过指定的factory method来创建bean
 		}
 
 		// Shortcut when re-creating the same bean...
@@ -1150,6 +1150,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Candidate constructors for autowiring?
+		// 拓展点 利用 SmartInstantiationAwareBeanPostProcessor 获得构造函数
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {

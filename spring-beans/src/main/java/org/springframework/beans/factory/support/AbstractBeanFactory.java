@@ -1255,7 +1255,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 			// Check with full lock now in order to enforce the same merged instance.
 			if (containingBd == null) {
-				mbd = this.mergedBeanDefinitions.get(beanName);
+				mbd = this.mergedBeanDefinitions.get(beanName);	//再次确认是否存在mergedBeanDefinition
 			}
 
 			if (mbd == null) {

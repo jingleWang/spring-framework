@@ -44,7 +44,7 @@ import org.springframework.core.AliasRegistry;
  * @see ChildBeanDefinition
  * @see DefaultListableBeanFactory
  * @see org.springframework.context.support.GenericApplicationContext
- * @see org.springframework.beans.factory.xml.XmlBeanDefinitionReader
+ * @see org.springframework.beans.factory.xml.XmlBeanDefinitionRea der
  * @see PropertiesBeanDefinitionReader
  */
 public interface BeanDefinitionRegistry extends AliasRegistry {
