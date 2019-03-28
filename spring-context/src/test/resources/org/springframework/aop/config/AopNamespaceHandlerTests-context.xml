@@ -26,5 +26,4 @@
 	<bean id="testBean" class="org.springframework.tests.sample.beans.TestBean"/>
 
 	<bean id="countingAdvice" class="org.springframework.aop.config.CountingAspectJAdvice"/>
-
 </beans>

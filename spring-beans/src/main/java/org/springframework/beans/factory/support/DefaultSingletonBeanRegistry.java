@@ -175,12 +175,14 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		Object singletonObject = this.singletonObjects.get(beanName);
-		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {	//对应bean没有被创建 或者 当前没有正在被创建
+		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+			//当前bean正在被创建且允许提前暴露喂初始化完成的引用
 			synchronized (this.singletonObjects) {
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
+						//从singletonFactory中获得正在创建的早期对象 放入 earlySingletonObjects 中
 						singletonObject = singletonFactory.getObject();
 						this.earlySingletonObjects.put(beanName, singletonObject);
 						this.singletonFactories.remove(beanName);
@@ -219,8 +221,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
-					//创建实例
-					singletonObject = singletonFactory.getObject();
+					singletonObject = singletonFactory.getObject();	//调用FactoryBean的getObject方法
 					newSingleton = true;
 				}
 				catch (IllegalStateException ex) {

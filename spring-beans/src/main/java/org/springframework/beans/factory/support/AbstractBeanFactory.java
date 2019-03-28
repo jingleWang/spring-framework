@@ -260,8 +260,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		else {
 			// Fail if we're already creating this bean instance:
 			// We're assumably within a circular reference.
-
-			if (isPrototypeCurrentlyInCreation(beanName)) {		//判断是否正在创建
+			if (isPrototypeCurrentlyInCreation(beanName)) {		//判断当前线程中是否正在创建原型bean
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
@@ -287,6 +286,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
+			//将当前bean标记为正在创建
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);	//将该bean标记为已经被创建, 清空mergedBeanDefinition缓存 以防止BeanDefinition在加载后被修改
 			}
@@ -1371,6 +1371,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * (also signals that the returned {@code Class} will never be exposed to application code)
 	 * @return the resolved bean class (or {@code null} if none)
 	 * @throws CannotLoadBeanClassException if we failed to load the class
+	 *
+	 * 获得真实class
 	 */
 	@Nullable
 	protected Class<?> resolveBeanClass(final RootBeanDefinition mbd, String beanName, final Class<?>... typesToMatch)

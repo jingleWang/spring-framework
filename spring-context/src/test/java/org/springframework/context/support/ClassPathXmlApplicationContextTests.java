@@ -75,12 +75,15 @@ public class ClassPathXmlApplicationContextTests {
 
 
 	@Test
-	public void testSingleConfigLocation() {
+	public void testSingleConfigLocation() throws InterruptedException {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(FQ_SIMPLE_CONTEXT);
 
 
 //		assertTrue(ctx.containsBean("someMessageSource"));
 		System.out.println(ctx.getBean("beanName"));
+//		System.out.println(ctx.getBean("test1"));
+//		Thread.sleep(100);
+		System.out.println(ctx.getBean("test"));
 		ctx.close();
 	}
 
